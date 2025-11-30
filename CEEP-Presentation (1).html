@@ -1,0 +1,2322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0a">
+    <title>CEEP - Clean Environmental Energy Project</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00ff88;
+            --primary-dim: #00cc6a;
+            --secondary: #ff6b35;
+            --accent: #00ffcc;
+            --dark: #0a0a0a;
+            --darker: #050505;
+            --surface: #111111;
+            --surface-light: #1a1a1a;
+            --text: #ffffff;
+            --text-dim: #a0a0a0;
+            --warning: #f5a623;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: var(--darker);
+            color: var(--text);
+            overflow-x: hidden;
+            overflow-y: auto;
+            cursor: none;
+        }
+
+        /* Custom Cursor */
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 999999;
+            transition: transform 0.1s ease, background 0.2s ease;
+            mix-blend-mode: difference;
+        }
+
+        .cursor-dot {
+            width: 4px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 999999;
+        }
+
+        .cursor.hover {
+            transform: scale(2);
+            background: rgba(0, 255, 136, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            body { cursor: auto; }
+            .cursor, .cursor-dot { display: none; }
+        }
+
+        /* =============================================
+           CINEMATIC INTRO
+           ============================================= */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--darker);
+            z-index: 100000;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #loader.fade-out {
+            animation: loaderFadeOut 1.5s ease-in-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes loaderFadeOut {
+            0% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+
+        .intro-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Animated Tire Particles */
+        .tire-particle {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 8px solid var(--text-dim);
+            border-radius: 50%;
+            opacity: 0;
+            animation: floatTire 8s ease-in-out infinite;
+        }
+
+        .tire-particle::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 4px solid var(--text-dim);
+            border-radius: 50%;
+        }
+
+        @keyframes floatTire {
+            0%, 100% { 
+                transform: translateY(100vh) rotate(0deg); 
+                opacity: 0;
+            }
+            10% { opacity: 0.3; }
+            90% { opacity: 0.3; }
+            100% { 
+                transform: translateY(-100px) rotate(720deg); 
+                opacity: 0;
+            }
+        }
+
+        /* Railroad Tie Particles */
+        .rail-particle {
+            position: absolute;
+            width: 80px;
+            height: 15px;
+            background: linear-gradient(90deg, #3d2914, #5a3d1a, #3d2914);
+            opacity: 0;
+            animation: floatRail 10s ease-in-out infinite;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        @keyframes floatRail {
+            0%, 100% { 
+                transform: translateY(100vh) rotate(-10deg); 
+                opacity: 0;
+            }
+            10% { opacity: 0.4; }
+            90% { opacity: 0.4; }
+            100% { 
+                transform: translateY(-100px) rotate(10deg); 
+                opacity: 0;
+            }
+        }
+
+        /* Energy Flow Lines */
+        .energy-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            animation: energyFlow 3s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        @keyframes energyFlow {
+            0%, 100% { 
+                transform: translateX(-100%); 
+                opacity: 0;
+            }
+            50% { opacity: 0.8; }
+            100% { 
+                transform: translateX(200%); 
+                opacity: 0;
+            }
+        }
+
+        .loader-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+        }
+
+        .loader-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(80px, 20vw, 200px);
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, var(--primary) 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: logoGlow 3s ease-in-out infinite, gradientShift 4s ease infinite;
+            text-shadow: 0 0 100px rgba(0, 255, 136, 0.5);
+            opacity: 0;
+            transform: scale(0.8);
+            animation: logoReveal 1.5s ease-out 0.5s forwards, gradientShift 4s ease infinite;
+        }
+
+        @keyframes logoReveal {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .loader-tagline {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(14px, 2.5vw, 24px);
+            color: var(--text);
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            margin-top: 20px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1.5s forwards;
+        }
+
+        .loader-subtitle {
+            font-family: 'Exo 2', sans-serif;
+            font-size: clamp(12px, 1.8vw, 18px);
+            color: var(--secondary);
+            font-weight: 300;
+            letter-spacing: 0.2em;
+            margin-top: 15px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 2s forwards;
+        }
+
+        .transformation-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(10px, 1.5vw, 14px);
+            color: var(--primary);
+            letter-spacing: 0.4em;
+            margin-top: 40px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 2.5s forwards;
+        }
+
+        .transformation-text span {
+            display: inline-block;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loader-bar-container {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .loader-text {
+            font-family: 'Orbitron', sans-serif;
+            color: rgba(0, 255, 136, 0.6);
+            font-size: 11px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .loader-bar {
+            width: 200px;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .loader-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.3s;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .skip-intro {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            z-index: 20;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.4);
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .skip-intro:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        /* =============================================
+           MAIN CONTENT
+           ============================================= */
+        .main-content {
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .main-content.visible {
+            opacity: 1;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            z-index: 10000;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            width: 0%;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            gap: 30px;
+            padding: 15px 30px;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 50px;
+            opacity: 0;
+            animation: navReveal 1s ease-out 0.5s forwards;
+        }
+
+        @keyframes navReveal {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .nav a {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav a:hover {
+            color: var(--primary);
+        }
+
+        .nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav a:hover::after {
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .nav {
+                display: none;
+            }
+        }
+
+        /* Sections */
+        section {
+            min-height: 100vh;
+            padding: 120px 5%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-number {
+            position: absolute;
+            top: 50%;
+            right: 5%;
+            transform: translateY(-50%);
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(150px, 25vw, 400px);
+            font-weight: 900;
+            color: rgba(0, 255, 136, 0.03);
+            pointer-events: none;
+            line-height: 1;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(36px, 6vw, 72px);
+            font-weight: 700;
+            margin-bottom: 40px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            border-radius: 2px;
+        }
+
+        /* Hero Section */
+        #hero {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 30% 50%, rgba(0, 255, 136, 0.08) 0%, transparent 60%),
+                        radial-gradient(ellipse at 70% 80%, rgba(255, 107, 53, 0.05) 0%, transparent 50%),
+                        var(--darker);
+            position: relative;
+        }
+
+        .hero-bg-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.15;
+        }
+
+        /* Animated Grid Background */
+        .grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+        }
+
+        .hero-content {
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            max-width: 1000px;
+            padding: 0 20px;
+        }
+
+        .hero-tagline {
+            font-family: 'Exo 2', sans-serif;
+            font-size: clamp(14px, 2vw, 20px);
+            color: var(--primary);
+            letter-spacing: 0.3em;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .hero-tagline::before,
+        .hero-tagline::after {
+            content: '';
+            width: 40px;
+            height: 1px;
+            background: var(--primary);
+        }
+
+        .hero-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(80px, 18vw, 220px);
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            background: linear-gradient(135deg, var(--text) 0%, var(--primary) 50%, var(--text) 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: heroGradient 5s ease infinite;
+            line-height: 1;
+            margin-bottom: 20px;
+        }
+
+        @keyframes heroGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .hero-full-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(16px, 2.5vw, 28px);
+            font-weight: 400;
+            letter-spacing: 0.4em;
+            color: var(--text);
+            margin-bottom: 50px;
+        }
+
+        .hero-description {
+            font-size: clamp(14px, 1.8vw, 18px);
+            color: var(--text-dim);
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.8;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            padding: 18px 40px;
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 3px;
+            text-decoration: none;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--primary);
+            transition: left 0.4s ease;
+            z-index: -1;
+        }
+
+        .hero-cta:hover {
+            color: var(--dark);
+        }
+
+        .hero-cta:hover::before {
+            left: 0;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-dim);
+            font-size: 10px;
+            letter-spacing: 3px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .scroll-indicator .line {
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, var(--primary), transparent);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(10px); }
+        }
+
+        /* Mission Section */
+        #mission {
+            background: var(--dark);
+        }
+
+        .mission-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .mission-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+        }
+
+        .mission-text h3 {
+            font-family: 'Exo 2', sans-serif;
+            font-size: clamp(18px, 2.5vw, 24px);
+            color: var(--primary);
+            font-style: italic;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .mission-text p {
+            font-size: clamp(14px, 1.6vw, 18px);
+            color: var(--text-dim);
+            line-height: 1.9;
+            margin-bottom: 20px;
+        }
+
+        .mission-visual {
+            position: relative;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .earth-container {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .earth {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #4a9eff 0%, #2d7dd2 30%, #1a5f8e 60%, #0d3a5c 100%);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 
+                inset -30px -30px 60px rgba(0,0,0,0.4),
+                0 0 60px rgba(74, 158, 255, 0.3),
+                0 0 120px rgba(0, 255, 136, 0.2);
+        }
+
+        .earth::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 15%;
+            width: 25%;
+            height: 20%;
+            background: var(--primary);
+            border-radius: 40% 60% 50% 50%;
+            opacity: 0.8;
+        }
+
+        .earth::after {
+            content: '';
+            position: absolute;
+            top: 40%;
+            right: 20%;
+            width: 30%;
+            height: 25%;
+            background: var(--primary);
+            border-radius: 50% 40% 60% 40%;
+            opacity: 0.8;
+        }
+
+        .sprout {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 50px;
+            background: linear-gradient(to top, #228B22, #32CD32);
+            border-radius: 2px;
+        }
+
+        .sprout::before,
+        .sprout::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 20px;
+            background: #32CD32;
+            border-radius: 50% 50% 50% 50%;
+        }
+
+        .sprout::before {
+            top: 0;
+            left: -25px;
+            transform: rotate(-30deg);
+        }
+
+        .sprout::after {
+            top: -10px;
+            right: -25px;
+            transform: rotate(30deg);
+        }
+
+        /* About Section */
+        #about {
+            background: var(--darker);
+        }
+
+        .commitment-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            max-width: 1400px;
+            margin: 60px auto 0;
+        }
+
+        @media (max-width: 1200px) {
+            .commitment-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .commitment-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .commitment-card {
+            background: var(--surface);
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            border-radius: 8px;
+            padding: 30px 25px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .commitment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .commitment-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 255, 136, 0.1);
+        }
+
+        .commitment-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .commitment-card h4 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .commitment-card p {
+            font-size: 14px;
+            color: var(--text-dim);
+            line-height: 1.8;
+        }
+
+        .commitment-card strong {
+            color: var(--text);
+        }
+
+        /* Problem Section */
+        #problem {
+            background: var(--dark);
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto 60px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 30px 20px;
+            background: var(--surface);
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            border-radius: 8px;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(20px, 3vw, 28px);
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .challenges-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .challenges-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .challenge-card {
+            background: linear-gradient(135deg, rgba(245, 166, 35, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%);
+            border: 1px solid var(--warning);
+            border-radius: 12px;
+            padding: 40px 30px;
+            position: relative;
+        }
+
+        .challenge-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--warning);
+            border-radius: 12px 0 0 12px;
+        }
+
+        .challenge-card h4 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: var(--warning);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .challenge-card p {
+            font-size: 15px;
+            color: var(--text-dim);
+            line-height: 1.8;
+        }
+
+        .challenge-card strong {
+            color: var(--text);
+        }
+
+        /* Feedstock Section */
+        #feedstock {
+            background: var(--darker);
+        }
+
+        .feedstock-hero {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .feedstock-hero h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(24px, 4vw, 48px);
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--text), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .feedstock-hero p {
+            font-size: 18px;
+            color: var(--text-dim);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .feedstock-items {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 60px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .feedstock-items {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .feedstock-item {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .feedstock-icon {
+            width: 100px;
+            height: 100px;
+            flex-shrink: 0;
+            background: var(--surface);
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .tire-icon {
+            width: 60px;
+            height: 60px;
+            border: 8px solid var(--text);
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .tire-icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 5px solid var(--text);
+            border-radius: 50%;
+        }
+
+        .rail-icon {
+            width: 70px;
+            height: 16px;
+            background: linear-gradient(90deg, #5a3d1a, #8b6914, #5a3d1a);
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .rail-icon::before,
+        .rail-icon::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 100%;
+            background: #2a1a0a;
+        }
+
+        .rail-icon::before { left: 15px; }
+        .rail-icon::after { right: 15px; }
+
+        .feedstock-content h4 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .feedstock-content p {
+            font-size: 15px;
+            color: var(--text-dim);
+            line-height: 1.8;
+        }
+
+        .feedstock-stats {
+            margin-top: 20px;
+            display: flex;
+            gap: 30px;
+        }
+
+        .feedstock-stat {
+            text-align: center;
+        }
+
+        .feedstock-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            color: var(--secondary);
+            font-weight: 700;
+        }
+
+        .feedstock-stat-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        /* Solution Section */
+        #solution {
+            background: var(--dark);
+        }
+
+        .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1400px;
+            margin: 60px auto 0;
+        }
+
+        @media (max-width: 1000px) {
+            .solution-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .solution-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .solution-card {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.05) 0%, rgba(0, 255, 204, 0.02) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+
+        .solution-card:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 204, 0.05) 100%);
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0, 255, 136, 0.15);
+        }
+
+        .solution-card h4 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            letter-spacing: 2px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .solution-card p {
+            font-size: 14px;
+            color: var(--text-dim);
+            line-height: 1.8;
+        }
+
+        .solution-card strong {
+            color: var(--text);
+        }
+
+        /* Process Section */
+        #process {
+            background: var(--darker);
+        }
+
+        .process-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            max-width: 1000px;
+            margin: 60px auto 0;
+        }
+
+        .process-step {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .process-question {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            min-width: 300px;
+        }
+
+        .process-answer {
+            flex: 1;
+            background: linear-gradient(90deg, rgba(0, 255, 136, 0.1), rgba(0, 255, 136, 0.02));
+            border-left: 3px solid var(--primary);
+            padding: 25px 30px;
+            border-radius: 0 12px 12px 0;
+            font-size: 16px;
+            color: var(--text);
+        }
+
+        @media (max-width: 768px) {
+            .process-step {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .process-question {
+                min-width: auto;
+            }
+        }
+
+        .output-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1000px;
+            margin: 60px auto 0;
+        }
+
+        @media (max-width: 768px) {
+            .output-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .output-item {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.08), rgba(0, 255, 136, 0.02));
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .output-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(28px, 4vw, 36px);
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .output-label {
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        /* Project Overview */
+        #overview {
+            background: var(--dark);
+        }
+
+        .overview-info {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 60px;
+            flex-wrap: wrap;
+        }
+
+        .overview-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .overview-item .icon {
+            width: 50px;
+            height: 50px;
+            background: var(--surface);
+            border: 1px solid var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .overview-item .text {
+            font-size: 15px;
+            color: var(--text-dim);
+        }
+
+        .overview-item .text strong {
+            display: block;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            color: var(--primary);
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .market-table {
+            width: 100%;
+            max-width: 800px;
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+
+        .market-table th,
+        .market-table td {
+            padding: 20px 30px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .market-table th {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--primary);
+            background: var(--surface);
+            text-transform: uppercase;
+        }
+
+        .market-table td {
+            font-size: 15px;
+            color: var(--text-dim);
+        }
+
+        /* Financials */
+        #financials {
+            background: var(--darker);
+        }
+
+        .financial-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 60px;
+            max-width: 1200px;
+            margin: 60px auto 0;
+        }
+
+        @media (max-width: 900px) {
+            .financial-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .financial-section h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            color: var(--primary);
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        .financial-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .financial-table th,
+        .financial-table td {
+            padding: 18px 20px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .financial-table th {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            background: var(--surface);
+            text-transform: uppercase;
+        }
+
+        .financial-table td {
+            font-size: 15px;
+            color: var(--text);
+        }
+
+        .financial-table tr:last-child {
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .financial-table tr:last-child td {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Team Section */
+        #team {
+            background: var(--dark);
+        }
+
+        .team-intro {
+            text-align: center;
+            margin-bottom: 60px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .team-intro p {
+            font-size: 18px;
+            color: var(--text-dim);
+            line-height: 1.8;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .team-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .team-member {
+            text-align: center;
+            padding: 40px 30px;
+            background: var(--surface);
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            border-radius: 16px;
+            transition: all 0.4s ease;
+        }
+
+        .team-member:hover {
+            border-color: var(--primary);
+            transform: translateY(-10px);
+        }
+
+        .member-avatar {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 25px;
+            background: linear-gradient(135deg, #87CEEB 0%, #4a9eff 50%, #32CD32 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .member-avatar::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            right: 10%;
+            height: 40%;
+            background: linear-gradient(to top, #228B22, #32CD32);
+            border-radius: 50% 50% 0 0;
+        }
+
+        .member-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .member-role {
+            font-size: 13px;
+            color: var(--primary);
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        .member-bio {
+            font-size: 14px;
+            color: var(--text-dim);
+            line-height: 1.7;
+        }
+
+        /* Statistics Section */
+        #statistics {
+            background: var(--darker);
+        }
+
+        .stats-table {
+            width: 100%;
+            max-width: 900px;
+            margin: 60px auto 0;
+            border-collapse: collapse;
+            background: var(--surface);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .stats-table th,
+        .stats-table td {
+            padding: 20px 30px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stats-table th {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--text);
+            background: rgba(0, 255, 136, 0.1);
+            text-transform: uppercase;
+        }
+
+        .stats-table td {
+            font-size: 14px;
+        }
+
+        .stats-table td:first-child {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .stats-table td:last-child {
+            color: var(--primary);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Growth Section */
+        #growth {
+            background: var(--dark);
+        }
+
+        .chart-container {
+            max-width: 900px;
+            margin: 60px auto 0;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            .chart-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-wrapper {
+            height: 400px;
+            position: relative;
+        }
+
+        .growth-text p {
+            font-size: 16px;
+            color: var(--text-dim);
+            line-height: 1.9;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--darker);
+            padding: 80px 5%;
+            text-align: center;
+            border-top: 1px solid rgba(0, 255, 136, 0.1);
+        }
+
+        .footer-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .footer-tagline {
+            font-size: 16px;
+            color: var(--text-dim);
+            letter-spacing: 3px;
+            margin-bottom: 40px;
+        }
+
+        .footer-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px 50px;
+            background: var(--primary);
+            color: var(--dark);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-decoration: none;
+            transition: all 0.4s ease;
+            border-radius: 50px;
+        }
+
+        .footer-cta:hover {
+            background: var(--accent);
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 255, 136, 0.3);
+        }
+
+        .footer-bottom {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .slide-in-left {
+            opacity: 0;
+            transform: translateX(-60px);
+            transition: all 0.8s ease;
+        }
+
+        .slide-in-left.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .slide-in-right {
+            opacity: 0;
+            transform: translateX(60px);
+            transition: all 0.8s ease;
+        }
+
+        .slide-in-right.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .scale-in {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.8s ease;
+        }
+
+        .scale-in.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Glow Effects */
+        .glow-green {
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-dot"></div>
+
+    <!-- Cinematic Intro -->
+    <div id="loader">
+        <!-- Animated Background Particles -->
+        <div class="tire-particle" style="left: 10%; animation-delay: 0s;"></div>
+        <div class="tire-particle" style="left: 25%; animation-delay: 2s;"></div>
+        <div class="tire-particle" style="left: 75%; animation-delay: 4s;"></div>
+        <div class="tire-particle" style="left: 90%; animation-delay: 1s;"></div>
+        <div class="rail-particle" style="left: 15%; animation-delay: 1.5s;"></div>
+        <div class="rail-particle" style="left: 50%; animation-delay: 3s;"></div>
+        <div class="rail-particle" style="left: 80%; animation-delay: 0.5s;"></div>
+        
+        <!-- Energy Lines -->
+        <div class="energy-line" style="top: 30%; width: 200px; animation-delay: 0s;"></div>
+        <div class="energy-line" style="top: 50%; width: 300px; animation-delay: 1s;"></div>
+        <div class="energy-line" style="top: 70%; width: 250px; animation-delay: 2s;"></div>
+
+        <div class="loader-content">
+            <div class="loader-logo">CEEP</div>
+            <div class="loader-tagline">CLEAN ENVIRONMENTAL ENERGY PROJECT</div>
+            <div class="loader-subtitle">Powering the Future, Sustaining the Planet</div>
+            <div class="transformation-text">
+                <span>TIRES</span> + <span>RAILROAD TIES</span> → <span>FUEL</span>
+            </div>
+        </div>
+
+        <div class="loader-bar-container">
+            <div class="loader-text">INITIALIZING SYSTEM</div>
+            <div class="loader-bar">
+                <div class="loader-progress" id="loaderProgress"></div>
+            </div>
+        </div>
+
+        <button class="skip-intro" onclick="skipIntro()">SKIP INTRO</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <a href="#hero">HOME</a>
+            <a href="#mission">MISSION</a>
+            <a href="#feedstock">FEEDSTOCK</a>
+            <a href="#solution">SOLUTION</a>
+            <a href="#financials">FINANCIALS</a>
+            <a href="#team">TEAM</a>
+        </nav>
+
+        <!-- Hero Section -->
+        <section id="hero">
+            <div class="grid-bg"></div>
+            <div class="hero-content">
+                <div class="hero-tagline">Powering the Future, Sustaining the Planet</div>
+                <div class="hero-logo">CEEP</div>
+                <div class="hero-full-name">CLEAN ENVIRONMENTAL ENERGY PROJECT</div>
+                <p class="hero-description">
+                    Transforming waste tires and railroad ties into valuable energy resources. 
+                    Our advanced recycling technology converts environmental liabilities into 
+                    crude oil, jet fuel, and sustainable by-products.
+                </p>
+                <a href="#mission" class="hero-cta">
+                    <span>DISCOVER OUR MISSION</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="scroll-indicator">
+                <span>SCROLL</span>
+                <div class="line"></div>
+            </div>
+            <div class="section-number">01</div>
+        </section>
+
+        <!-- Mission Section -->
+        <section id="mission">
+            <div class="section-title fade-in">Our Mission</div>
+            <div class="mission-grid">
+                <div class="mission-text slide-in-left">
+                    <h3>"Powering the Future, Sustaining the Planet."</h3>
+                    <p>
+                        CEEP (Clean Environmental Energy Project) is dedicated to transforming 
+                        the global waste crisis into a sustainable energy solution.
+                    </p>
+                    <p>
+                        Our mission is to innovate and implement advanced recycling technologies 
+                        that convert waste into valuable energy resources, including crude oil and 
+                        jet fuel, while simultaneously reducing landfill waste and carbon emissions.
+                    </p>
+                </div>
+                <div class="mission-visual slide-in-right">
+                    <div class="earth-container">
+                        <div class="earth">
+                            <div class="sprout"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="section-number">02</div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about">
+            <div class="section-title fade-in">About Us</div>
+            <p class="fade-in" style="font-size: 20px; color: var(--text-dim); margin-bottom: 20px;">At CEEP, we are committed to:</p>
+            <div class="commitment-grid">
+                <div class="commitment-card fade-in">
+                    <h4>Recycling & Recovery</h4>
+                    <p>We process over <strong>100,000 tons of waste</strong> annually to produce <strong>525,000 barrels of crude oil</strong> and <strong>260,000 barrels of jet fuel</strong>, utilizing advanced technology for efficient conversion.</p>
+                </div>
+                <div class="commitment-card fade-in" style="animation-delay: 0.1s;">
+                    <h4>Sustainable By-Products</h4>
+                    <p>Our operations generate valuable by-products like <strong>black char and methane gas</strong>, which are then repurposed into advanced material essential for sustainable industries.</p>
+                </div>
+                <div class="commitment-card fade-in" style="animation-delay: 0.2s;">
+                    <h4>Environmental Stewardship</h4>
+                    <p>We believe in leading the charge towards a cleaner, greener future by <strong>reducing reliance on fossil fuels</strong>, <strong>minimizing landfill contributions</strong>, and <strong>lowering carbon footprints</strong> across various sectors.</p>
+                </div>
+                <div class="commitment-card fade-in" style="animation-delay: 0.3s;">
+                    <h4>Community Engagement</h4>
+                    <p>We at CEEP, foster awareness and collaboration within the communities to support <strong>various sustainable practices</strong> and <strong>encourage their participation</strong> in our initiatives.</p>
+                </div>
+                <div class="commitment-card fade-in" style="animation-delay: 0.4s;">
+                    <h4>Vision for the Future</h4>
+                    <p>We envision a world where waste is transformed into a powerful resource that meets our energy needs while <strong>safeguarding the planet</strong> for future generations.</p>
+                </div>
+            </div>
+            <div class="section-number">03</div>
+        </section>
+
+        <!-- Feedstock Section -->
+        <section id="feedstock">
+            <div class="section-title fade-in">Our Feedstock</div>
+            <div class="feedstock-hero fade-in">
+                <h3>From Waste to Wealth</h3>
+                <p>We source abundant waste materials that would otherwise burden landfills and the environment, transforming them into valuable energy resources.</p>
+            </div>
+            <div class="feedstock-items">
+                <div class="feedstock-item fade-in">
+                    <div class="feedstock-icon">
+                        <div class="tire-icon"></div>
+                    </div>
+                    <div class="feedstock-content">
+                        <h4>Waste Tires</h4>
+                        <p>Over 300 million scrap tires are generated annually in the U.S. alone. Our advanced pyrolysis technology breaks down tire rubber into valuable hydrocarbons, recovering up to 40% as oil and 35% as carbon black.</p>
+                        <div class="feedstock-stats">
+                            <div class="feedstock-stat">
+                                <div class="feedstock-stat-value">300M+</div>
+                                <div class="feedstock-stat-label">Tires/Year (US)</div>
+                            </div>
+                            <div class="feedstock-stat">
+                                <div class="feedstock-stat-value">40%</div>
+                                <div class="feedstock-stat-label">Oil Recovery</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="feedstock-item fade-in" style="animation-delay: 0.2s;">
+                    <div class="feedstock-icon">
+                        <div class="rail-icon"></div>
+                    </div>
+                    <div class="feedstock-content">
+                        <h4>Railroad Ties</h4>
+                        <p>Approximately 20 million railroad ties are retired each year in North America. Treated with creosote, these ties are hazardous waste—but perfect feedstock for our thermal conversion process.</p>
+                        <div class="feedstock-stats">
+                            <div class="feedstock-stat">
+                                <div class="feedstock-stat-value">20M</div>
+                                <div class="feedstock-stat-label">Ties/Year</div>
+                            </div>
+                            <div class="feedstock-stat">
+                                <div class="feedstock-stat-value">High</div>
+                                <div class="feedstock-stat-label">Energy Content</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="section-number">04</div>
+        </section>
+
+        <!-- Problem Section -->
+        <section id="problem">
+            <div class="section-title fade-in">The Problem</div>
+            <div class="stats-row">
+                <div class="stat-item fade-in">
+                    <div class="stat-label">Total Municipal Solid Waste</div>
+                    <div class="stat-value">267.8M tons</div>
+                </div>
+                <div class="stat-item fade-in" style="animation-delay: 0.1s;">
+                    <div class="stat-label">Daily Garbage Generation</div>
+                    <div class="stat-value">728,000 tons/day</div>
+                </div>
+                <div class="stat-item fade-in" style="animation-delay: 0.2s;">
+                    <div class="stat-label">Overall Recycling Rate</div>
+                    <div class="stat-value">35%</div>
+                </div>
+                <div class="stat-item fade-in" style="animation-delay: 0.3s;">
+                    <div class="stat-label">Plastic Recycling Rate</div>
+                    <div class="stat-value">5-6%</div>
+                </div>
+                <div class="stat-item fade-in" style="animation-delay: 0.4s;">
+                    <div class="stat-label">Waste for Energy Recovery</div>
+                    <div class="stat-value">35M tons (11.8%)</div>
+                </div>
+            </div>
+            <p class="fade-in" style="font-size: 20px; color: var(--text); margin-bottom: 40px; text-align: center;">
+                The U.S. faces significant challenges in waste management and energy production:
+            </p>
+            <div class="challenges-grid">
+                <div class="challenge-card fade-in">
+                    <h4>Waste Accumulation</h4>
+                    <p>Increasing volumes of construction debris, tires, and other refuse contribute to landfill overflow, leading to environmental degradation.</p>
+                </div>
+                <div class="challenge-card fade-in" style="animation-delay: 0.1s;">
+                    <h4>Energy Demand</h4>
+                    <p>The alternative energy market, valued at <strong>$943.39 billion in 2023</strong>, is expected to reach nearly <strong>$2,066.08 billion by 2030</strong>, indicating a growing need for sustainable energy sources.</p>
+                </div>
+                <div class="challenge-card fade-in" style="animation-delay: 0.2s;">
+                    <h4>Rising Jet Fuel & Crude Oil Demand</h4>
+                    <p>Global jet fuel demand is rising, with consumption reaching approximately <strong>1.65 million barrels per day in the U.S.</strong> in 2023 and projected to hit about <strong>8 million b/d</strong> globally by end of 2024.</p>
+                </div>
+            </div>
+            <div class="section-number">05</div>
+        </section>
+
+        <!-- Solution Section -->
+        <section id="solution">
+            <div class="section-title fade-in">The Solution</div>
+            <div class="solution-grid">
+                <div class="solution-card scale-in">
+                    <h4>Innovative Waste Processing</h4>
+                    <p>CEEP processes over <strong>100,000 tons</strong> of waste annually, producing <strong>525,000 barrels of crude oil</strong> and <strong>260,000 barrels of jet fuel</strong>, addressing the rising demand for these essential energy resources.</p>
+                </div>
+                <div class="solution-card scale-in" style="animation-delay: 0.1s;">
+                    <h4>Sustainable By-Products</h4>
+                    <p>CEEP generates valuable by-products such as <strong>black char and methane gas</strong>, repurposed for advanced materials in various industries.</p>
+                </div>
+                <div class="solution-card scale-in" style="animation-delay: 0.2s;">
+                    <h4>Reducing Environmental Impact</h4>
+                    <p>By minimizing landfill contributions and lowering carbon emissions, CEEP is dedicated to promoting a cleaner, greener environment.</p>
+                </div>
+                <div class="solution-card scale-in" style="animation-delay: 0.3s;">
+                    <h4>Community Involvement & Awareness</h4>
+                    <p>CEEP actively promotes awareness and collaboration within communities to foster support for sustainable practices.</p>
+                </div>
+                <div class="solution-card scale-in" style="animation-delay: 0.4s;">
+                    <h4>Creating a Circular Economy</h4>
+                    <p>CEEP envisions a future where waste is not merely discarded but transformed into a powerful resource.</p>
+                </div>
+            </div>
+            <div class="section-number">06</div>
+        </section>
+
+        <!-- Process Section -->
+        <section id="process">
+            <div class="section-title fade-in">Process & Numbers</div>
+            <div class="process-flow">
+                <div class="process-step fade-in">
+                    <div class="process-question">The Process: How and what we are doing?</div>
+                    <div class="process-answer">Taking waste material by recycling it and turning it to fuels and advanced materials</div>
+                </div>
+                <div class="process-step fade-in" style="animation-delay: 0.1s;">
+                    <div class="process-question">How much waste will we recycle per year?</div>
+                    <div class="process-answer">100,000 tons of waste recycled per year</div>
+                </div>
+            </div>
+            <h3 class="fade-in" style="font-family: 'Orbitron', sans-serif; font-size: 20px; color: var(--text); margin-top: 60px; text-align: center;">Annual Output</h3>
+            <div class="output-grid">
+                <div class="output-item scale-in">
+                    <div class="output-value">100,000</div>
+                    <div class="output-label">tons of waste recycled per year</div>
+                </div>
+                <div class="output-item scale-in" style="animation-delay: 0.1s;">
+                    <div class="output-value">260,000</div>
+                    <div class="output-label">barrels of jet fuel per year</div>
+                </div>
+                <div class="output-item scale-in" style="animation-delay: 0.2s;">
+                    <div class="output-value">525,000</div>
+                    <div class="output-label">barrels of crude oil per year</div>
+                </div>
+            </div>
+            <div class="section-number">07</div>
+        </section>
+
+        <!-- Project Overview -->
+        <section id="overview">
+            <div class="section-title fade-in">Project Overview</div>
+            <div class="overview-info fade-in">
+                <div class="overview-item">
+                    <div class="icon">📍</div>
+                    <div class="text">
+                        <strong>LOCATIONS</strong>
+                        Painted Post, Hamilton County, LaBelle, FL
+                    </div>
+                </div>
+                <div class="overview-item">
+                    <div class="icon">👥</div>
+                    <div class="text">
+                        <strong>TOTAL STAFFING</strong>
+                        Approximately 60-90 employees across all locations
+                    </div>
+                </div>
+            </div>
+            <h3 class="fade-in" style="font-family: 'Orbitron', sans-serif; font-size: 24px; color: var(--text); margin: 60px 0 30px;">Market Overview</h3>
+            <table class="market-table fade-in">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>2024 Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Waste Management Market (US)</td>
+                        <td>$80.01 billion (estimated)</td>
+                    </tr>
+                    <tr>
+                        <td>Recycling Rate (US)</td>
+                        <td>35% of waste recycled</td>
+                    </tr>
+                    <tr>
+                        <td>Alternative Energy Market</td>
+                        <td>$943.39 billion</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="section-number">08</div>
+        </section>
+
+        <!-- Financials Section -->
+        <section id="financials">
+            <div class="section-title fade-in">Financial Overview</div>
+            <div class="financial-grid">
+                <div class="financial-section fade-in">
+                    <h3>Year One Revenue</h3>
+                    <table class="financial-table">
+                        <thead>
+                            <tr>
+                                <th>Revenue Stream</th>
+                                <th>Projected Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Syngas sales (Painted Post)</td>
+                                <td>$15,000,000</td>
+                            </tr>
+                            <tr>
+                                <td>Carbon sales (Painted Post)</td>
+                                <td>$5,000,000</td>
+                            </tr>
+                            <tr>
+                                <td>Graphene sales (Hamilton County)</td>
+                                <td>$30,000,000</td>
+                            </tr>
+                            <tr>
+                                <td>Total Revenue</td>
+                                <td>$65,000,000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="financial-section fade-in" style="animation-delay: 0.2s;">
+                    <h3>Year One Costs</h3>
+                    <table class="financial-table">
+                        <thead>
+                            <tr>
+                                <th>Cost Category</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total Fixed Costs</td>
+                                <td>$730,000</td>
+                            </tr>
+                            <tr>
+                                <td>Total Variable Costs</td>
+                                <td>$7,955,000</td>
+                            </tr>
+                            <tr>
+                                <td>Total Costs</td>
+                                <td>$8,685,000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="section-number">09</div>
+        </section>
+
+        <!-- Team Section -->
+        <section id="team">
+            <div class="section-title fade-in">Our Team</div>
+            <div class="team-intro fade-in">
+                <p>The GRAPHWERX Company team is passionate about sustainability and helping the environment.</p>
+            </div>
+            <div class="team-grid">
+                <div class="team-member fade-in">
+                    <div class="member-avatar"></div>
+                    <div class="member-name">Daniel Gallego</div>
+                    <div class="member-role">Graphene Production Operator</div>
+                    <div class="member-bio">Work with a team of engineers and designers to develop products that are sustainable and meet the needs of the customer.</div>
+                </div>
+                <div class="team-member fade-in" style="animation-delay: 0.1s;">
+                    <div class="member-avatar"></div>
+                    <div class="member-name">Isabel Mercado</div>
+                    <div class="member-role">Energy Management Specialist</div>
+                    <div class="member-bio">The designer manager role is similar to that of an art director, but with more emphasis on management and strategic planning.</div>
+                </div>
+                <div class="team-member fade-in" style="animation-delay: 0.2s;">
+                    <div class="member-avatar"></div>
+                    <div class="member-name">Hae-won Jeon</div>
+                    <div class="member-role">Financial Analyst</div>
+                    <div class="member-bio">They are the ones who take the time to research and develop products that will help to reduce our impact on the environment.</div>
+                </div>
+                <div class="team-member fade-in" style="animation-delay: 0.3s;">
+                    <div class="member-avatar"></div>
+                    <div class="member-name">Harper Russo</div>
+                    <div class="member-role">Legal Counsel</div>
+                    <div class="member-bio">Someone who evaluates different materials and production processes to find the most efficient and sustainable way to create a product.</div>
+                </div>
+                <div class="team-member fade-in" style="animation-delay: 0.4s;">
+                    <div class="member-avatar"></div>
+                    <div class="member-name">Richard Sanchez</div>
+                    <div class="member-role">Sales and Marketing Manager</div>
+                    <div class="member-bio">Focused on understanding the needs of the customer and how they can be met in a sustainable way.</div>
+                </div>
+            </div>
+            <div class="section-number">10</div>
+        </section>
+
+        <!-- Statistics Section -->
+        <section id="statistics">
+            <div class="section-title fade-in">U.S. Recycling Statistics</div>
+            <table class="stats-table fade-in">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Statistic</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total Municipal Solid Waste (MSW)</td>
+                        <td>292.4 million tons (2018)</td>
+                    </tr>
+                    <tr>
+                        <td>Daily Garbage Generation</td>
+                        <td>728,000 tons per day</td>
+                    </tr>
+                    <tr>
+                        <td>Organic Waste (Annual)</td>
+                        <td>1,200 pounds per person</td>
+                    </tr>
+                    <tr>
+                        <td>Overall Recycling Rate</td>
+                        <td>35% (67.2 million tons recycled)</td>
+                    </tr>
+                    <tr>
+                        <td>Plastic Recycling Rate</td>
+                        <td>5% to 6% of 46 million tons</td>
+                    </tr>
+                    <tr>
+                        <td>Aluminum Recycling Rate</td>
+                        <td>63.6% (620,000 tons recycled annually)</td>
+                    </tr>
+                    <tr>
+                        <td>Glass Recycling Rate</td>
+                        <td>33% (10 million tons recycled annually)</td>
+                    </tr>
+                    <tr>
+                        <td>Paper and Cardboard Recycling</td>
+                        <td>67% of total recycling</td>
+                    </tr>
+                    <tr>
+                        <td>E-Waste Generation (2017)</td>
+                        <td>2.8 million tons</td>
+                    </tr>
+                    <tr>
+                        <td>E-Waste Recycled (2017)</td>
+                        <td>About 1 million tons</td>
+                    </tr>
+                    <tr>
+                        <td>Textile Waste Generation</td>
+                        <td>16.9 million tons annually</td>
+                    </tr>
+                    <tr>
+                        <td>Textile Recycling Rate</td>
+                        <td>Approximately 15%</td>
+                    </tr>
+                    <tr>
+                        <td>Landfill Disposal (2018)</td>
+                        <td>More than 146 million tons</td>
+                    </tr>
+                    <tr>
+                        <td>Waste Combustion for Energy Recovery</td>
+                        <td>Nearly 35 million tons (11.8%)</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="section-number">11</div>
+        </section>
+
+        <!-- Growth Section -->
+        <section id="growth">
+            <div class="section-title fade-in">Market Growth</div>
+            <div class="chart-container">
+                <div class="chart-wrapper fade-in">
+                    <canvas id="growthChart"></canvas>
+                </div>
+                <div class="growth-text fade-in" style="animation-delay: 0.2s;">
+                    <p>The sustainable product market is expected to continue to grow in the coming years, with more consumers becoming interested in buying eco-friendly products.</p>
+                    <br>
+                    <p>This growth will be driven by a number of factors, including increasing awareness of the environmental impact of consumerism, the desire to support companies that are doing good for the planet, and the availability of more sustainable products on the market.</p>
+                </div>
+            </div>
+            <div class="section-number">12</div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <div class="footer-logo">CEEP</div>
+            <div class="footer-tagline">POWERING THE FUTURE, SUSTAINING THE PLANET</div>
+            <a href="#hero" class="footer-cta">
+                JOIN THE REVOLUTION
+            </a>
+            <div class="footer-bottom">
+                © 2024 CEEP - CLEAN ENVIRONMENTAL ENERGY PROJECT
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Loader Animation
+        let progress = 0;
+        const loaderProgress = document.getElementById('loaderProgress');
+        const loader = document.getElementById('loader');
+        const mainContent = document.getElementById('mainContent');
+
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(progressInterval);
+                setTimeout(() => {
+                    loader.classList.add('fade-out');
+                    mainContent.classList.add('visible');
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                    }, 1500);
+                }, 500);
+            }
+            loaderProgress.style.width = progress + '%';
+        }, 200);
+
+        function skipIntro() {
+            clearInterval(progressInterval);
+            loader.classList.add('fade-out');
+            mainContent.classList.add('visible');
+            setTimeout(() => {
+                loader.style.display = 'none';
+            }, 1500);
+        }
+
+        // Custom Cursor
+        const cursor = document.querySelector('.cursor');
+        const cursorDot = document.querySelector('.cursor-dot');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX - 10 + 'px';
+            cursor.style.top = e.clientY - 10 + 'px';
+            cursorDot.style.left = e.clientX - 2 + 'px';
+            cursorDot.style.top = e.clientY - 2 + 'px';
+        });
+
+        document.querySelectorAll('a, button, .commitment-card, .solution-card, .team-member').forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+        });
+
+        // Progress Bar
+        const progressBar = document.getElementById('progressBar');
+        window.addEventListener('scroll', () => {
+            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrolled = window.scrollY;
+            const progress = (scrolled / scrollHeight) * 100;
+            progressBar.style.width = progress + '%';
+        });
+
+        // Scroll Animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in, .slide-in-left, .slide-in-right, .scale-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth Scroll for Navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Growth Chart
+        setTimeout(() => {
+            const ctx = document.getElementById('growthChart');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
+                        datasets: [
+                            {
+                                label: 'Local',
+                                data: [40, 60, 90, 120, 150],
+                                backgroundColor: 'rgba(0, 255, 136, 0.8)',
+                                borderColor: '#00ff88',
+                                borderWidth: 0
+                            },
+                            {
+                                label: 'Global',
+                                data: [30, 70, 120, 180, 220],
+                                backgroundColor: 'rgba(0, 204, 106, 0.8)',
+                                borderColor: '#00cc6a',
+                                borderWidth: 0
+                            },
+                            {
+                                label: 'Other',
+                                data: [30, 70, 90, 100, 130],
+                                backgroundColor: 'rgba(34, 139, 34, 0.8)',
+                                borderColor: '#228B22',
+                                borderWidth: 0
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    color: '#a0a0a0',
+                                    font: { size: 12 },
+                                    usePointStyle: true
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Sustainable Product Market Growth',
+                                color: '#00ff88',
+                                font: { size: 18, weight: 'bold' },
+                                padding: 20
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#a0a0a0' }
+                            },
+                            y: {
+                                stacked: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#a0a0a0' },
+                                max: 500
+                            }
+                        }
+                    }
+                });
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
