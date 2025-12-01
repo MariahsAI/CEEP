@@ -292,12 +292,54 @@
             .corner { width: 50px; height: 50px; }
             .corner::before { width: 50px; }
             .corner::after { height: 50px; }
-            .corner.tl, .corner.tr, .corner.bl, .corner.br { top: 15px; }
+            .corner.tl, .corner.tr { top: 15px; }
+            .corner.bl, .corner.br { bottom: 15px; }
             .corner.tl, .corner.bl { left: 15px; }
             .corner.tr, .corner.br { right: 15px; }
-            .corner.bl, .corner.br { top: auto; bottom: 15px; }
             .h-line { display: none; }
-            .stats-bar { gap: 30px; }
+            .stats-bar { 
+                gap: 20px; 
+                flex-wrap: wrap;
+                justify-content: center;
+                padding: 0 20px;
+            }
+            .stat-value {
+                font-size: 18px;
+            }
+            .stat-label {
+                font-size: 8px;
+            }
+            .tagline {
+                letter-spacing: 5px;
+                padding: 0 20px;
+            }
+            .enter-btn {
+                padding: 15px 40px;
+                font-size: 12px;
+                letter-spacing: 5px;
+            }
+            .content {
+                bottom: 20%;
+            }
+            .stats-bar {
+                bottom: 8%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .corner { width: 35px; height: 35px; }
+            .corner::before { width: 35px; }
+            .corner::after { height: 35px; }
+            .stats-bar {
+                gap: 15px;
+            }
+            .stat-value {
+                font-size: 16px;
+            }
+            .tagline {
+                font-size: 10px;
+                letter-spacing: 3px;
+            }
         }
     </style>
 </head>
@@ -306,7 +348,7 @@
 
     <!-- Video Background -->
     <div class="video-background">
-        <video autoplay loop muted playsinline>
+        <video autoplay loop muted playsinline webkit-playsinline>
             <source src="fire-video.mp4" type="video/mp4">
         </video>
     </div>
@@ -374,8 +416,9 @@
         const loading = document.getElementById('loading');
 
         const scene = new THREE.Scene();
+        const isMobile = window.innerWidth < 768;
         const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 8;
+        camera.position.z = isMobile ? 10 : 8;
 
         const renderer = new THREE.WebGLRenderer({ 
             canvas: canvas, 
@@ -648,6 +691,8 @@
 
         // Handle resize
         window.addEventListener('resize', () => {
+            const isMobileNow = window.innerWidth < 768;
+            camera.position.z = isMobileNow ? 10 : 8;
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
