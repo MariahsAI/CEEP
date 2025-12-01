@@ -1485,7 +1485,7 @@
                 linear-gradient(#fff 0 0) content-box, 
                 linear-gradient(#fff 0 0);
             mask-composite: exclude;
-            animation: borderRotate 4s linear infinite;
+            animation: borderRotate 30s linear infinite;
             animation-delay: var(--scan-delay, 0s);
             pointer-events: none;
         }
@@ -1498,7 +1498,7 @@
             height: 100px;
             background: radial-gradient(circle, rgba(255, 200, 80, 0.4) 0%, transparent 70%);
             border-radius: 50%;
-            animation: glowMove 4s linear infinite;
+            animation: glowMove 30s linear infinite;
             animation-delay: var(--scan-delay, 0s);
             pointer-events: none;
             filter: blur(10px);
@@ -1562,7 +1562,7 @@
                 0 0 15px rgba(255, 200, 80, 0.7),
                 0 0 30px rgba(255, 200, 80, 0.5),
                 0 0 50px rgba(255, 200, 80, 0.3);
-            animation: scanLine 6s ease-in-out infinite;
+            animation: scanLine 20s ease-in-out infinite;
             animation-delay: var(--scan-delay, 0s);
             z-index: 2;
         }
@@ -1586,7 +1586,7 @@
         }
 
         .advantage-card:hover .scan-line {
-            animation-duration: 4s;
+            animation-duration: 15s;
         }
 
         /* Orange/Ember variant cards */
@@ -1639,7 +1639,7 @@
         }
 
         .advantage-card.orange:hover .scan-line {
-            animation-duration: 4s;
+            animation-duration: 15s;
         }
 
         .advantage-card.orange h4 {
