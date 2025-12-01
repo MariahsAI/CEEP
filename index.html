@@ -174,9 +174,20 @@
             position: relative;
             overflow: hidden;
             transition: all 0.4s ease;
-            animation: fadeIn 2s ease 1.5s forwards;
+            animation: fadeIn 2s ease 1.5s forwards, btnPulse 2s ease-in-out 3.5s infinite;
             opacity: 0;
             text-decoration: none;
+        }
+
+        @keyframes btnPulse {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+                border-color: #ff6b35;
+            }
+            50% { 
+                box-shadow: 0 0 50px rgba(255, 107, 53, 0.9), 0 0 80px rgba(255, 107, 53, 0.5), 0 0 100px rgba(255, 107, 53, 0.3);
+                border-color: #ffcc00;
+            }
         }
 
         .enter-btn::before {
@@ -202,6 +213,75 @@
 
         @keyframes fadeIn {
             to { opacity: 1; }
+        }
+
+        /* Flash burst effect when letters come together */
+        .flash-burst {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #fff 0%, #ffcc00 30%, #ff6b35 60%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .flash-burst.active {
+            animation: burstFlash 0.8s ease-out forwards;
+        }
+
+        @keyframes burstFlash {
+            0% {
+                width: 10px;
+                height: 10px;
+                opacity: 1;
+            }
+            30% {
+                opacity: 0.9;
+            }
+            100% {
+                width: 150vmax;
+                height: 150vmax;
+                opacity: 0;
+            }
+        }
+
+        /* Shockwave rings */
+        .shockwave {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border: 3px solid #ff6b35;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 99;
+        }
+
+        .shockwave.active {
+            animation: shockwaveExpand 1s ease-out forwards;
+        }
+
+        @keyframes shockwaveExpand {
+            0% {
+                width: 50px;
+                height: 50px;
+                opacity: 1;
+                border-width: 4px;
+            }
+            100% {
+                width: 100vmax;
+                height: 100vmax;
+                opacity: 0;
+                border-width: 1px;
+            }
         }
 
         /* Loading state */
@@ -360,6 +440,12 @@
     </div>
     <div class="video-overlay"></div>
 
+    <!-- Flash burst effect -->
+    <div class="flash-burst" id="flashBurst"></div>
+    <div class="shockwave" id="shockwave1"></div>
+    <div class="shockwave" id="shockwave2"></div>
+    <div class="shockwave" id="shockwave3"></div>
+
     <!-- Scan line effect -->
     <div class="scanline"></div>
 
@@ -406,15 +492,107 @@
     <script>
         // Generate particles
         const particlesContainer = document.getElementById('particles');
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 80; i++) {
             const particle = document.createElement('div');
             particle.className = 'particle';
             particle.style.left = Math.random() * 100 + '%';
             particle.style.bottom = Math.random() * 30 + '%';
             particle.style.animationDelay = Math.random() * 6 + 's';
             particle.style.animationDuration = (4 + Math.random() * 4) + 's';
+            // Vary particle sizes
+            const size = 2 + Math.random() * 4;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
             particlesContainer.appendChild(particle);
         }
+
+        // Sound effects using Web Audio API
+        let audioContext;
+        
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playWhooshSound() {
+            initAudio();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+            
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.3);
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(1000, audioContext.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+            
+            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        function playImpactSound() {
+            initAudio();
+            
+            // Deep boom
+            const oscillator1 = audioContext.createOscillator();
+            const gainNode1 = audioContext.createGain();
+            oscillator1.type = 'sine';
+            oscillator1.frequency.setValueAtTime(80, audioContext.currentTime);
+            oscillator1.frequency.exponentialRampToValueAtTime(30, audioContext.currentTime + 0.5);
+            gainNode1.gain.setValueAtTime(0.4, audioContext.currentTime);
+            gainNode1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            oscillator1.connect(gainNode1);
+            gainNode1.connect(audioContext.destination);
+            oscillator1.start(audioContext.currentTime);
+            oscillator1.stop(audioContext.currentTime + 0.5);
+            
+            // High shimmer
+            const oscillator2 = audioContext.createOscillator();
+            const gainNode2 = audioContext.createGain();
+            oscillator2.type = 'triangle';
+            oscillator2.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator2.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.8);
+            gainNode2.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+            oscillator2.connect(gainNode2);
+            gainNode2.connect(audioContext.destination);
+            oscillator2.start(audioContext.currentTime);
+            oscillator2.stop(audioContext.currentTime + 0.8);
+            
+            // Noise burst
+            const bufferSize = audioContext.sampleRate * 0.3;
+            const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.1));
+            }
+            const noise = audioContext.createBufferSource();
+            noise.buffer = buffer;
+            const noiseGain = audioContext.createGain();
+            noiseGain.gain.setValueAtTime(0.15, audioContext.currentTime);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            const noiseFilter = audioContext.createBiquadFilter();
+            noiseFilter.type = 'lowpass';
+            noiseFilter.frequency.value = 500;
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(audioContext.destination);
+            noise.start(audioContext.currentTime);
+        }
+
+        // Initialize audio on first user interaction
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
 
         // Three.js 3D Logo
         const canvas = document.getElementById('webgl');
@@ -586,6 +764,12 @@
             setTimeout(() => {
                 animationStarted = true;
                 startTime = Date.now();
+                
+                // Play whoosh sounds for each letter with staggered delays
+                playWhooshSound();
+                setTimeout(() => playWhooshSound(), 150);
+                setTimeout(() => playWhooshSound(), 300);
+                setTimeout(() => playWhooshSound(), 450);
             }, 500);
         });
 
@@ -664,6 +848,20 @@
                 
                 if (allComplete) {
                     animationComplete = true;
+                    // Trigger flash burst
+                    document.getElementById('flashBurst').classList.add('active');
+                    setTimeout(() => {
+                        document.getElementById('shockwave1').classList.add('active');
+                    }, 50);
+                    setTimeout(() => {
+                        document.getElementById('shockwave2').classList.add('active');
+                    }, 150);
+                    setTimeout(() => {
+                        document.getElementById('shockwave3').classList.add('active');
+                    }, 250);
+                    
+                    // Play impact sound
+                    playImpactSound();
                 }
             }
 
